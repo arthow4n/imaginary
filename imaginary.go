@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,40 +12,43 @@ import (
 	"strings"
 	"time"
 
+	"github.com/namsral/flag"
+
 	bimg "gopkg.in/h2non/bimg.v1"
 )
 
 var (
-	aAddr               = flag.String("a", "", "Bind address")
-	aPort               = flag.Int("p", 8088, "Port to listen")
-	aVers               = flag.Bool("v", false, "Show version")
-	aVersl              = flag.Bool("version", false, "Show version")
-	aHelp               = flag.Bool("h", false, "Show help")
-	aHelpl              = flag.Bool("help", false, "Show help")
-	aPathPrefix         = flag.String("path-prefix", "/", "Url path prefix to listen to")
-	aCors               = flag.Bool("cors", false, "Enable CORS support")
-	aGzip               = flag.Bool("gzip", false, "Enable gzip compression (deprecated)")
-	aAuthForwarding     = flag.Bool("enable-auth-forwarding", false, "Forwards X-Forward-Authorization or Authorization header to the image source server. -enable-url-source flag must be defined. Tip: secure your server from public access to prevent attack vectors")
-	aEnableURLSource    = flag.Bool("enable-url-source", false, "Enable remote HTTP URL image source processing")
-	aEnablePlaceholder  = flag.Bool("enable-placeholder", false, "Enable image response placeholder to be used in case of error")
-	aEnableURLSignature = flag.Bool("enable-url-signature", false, "Enable URL signature (URL-safe Base64-encoded HMAC digest)")
-	aURLSignatureKey    = flag.String("url-signature-key", "", "The URL signature key (32 characters minimum)")
-	aAllowedOrigins     = flag.String("allowed-origins", "", "Restrict remote image source processing to certain origins (separated by commas)")
-	aMaxAllowedSize     = flag.Int("max-allowed-size", 0, "Restrict maximum size of http image source (in bytes)")
-	aKey                = flag.String("key", "", "Define API key for authorization")
-	aMount              = flag.String("mount", "", "Mount server local directory")
-	aCertFile           = flag.String("certfile", "", "TLS certificate file path")
-	aKeyFile            = flag.String("keyfile", "", "TLS private key file path")
-	aAuthorization      = flag.String("authorization", "", "Defines a constant Authorization header value passed to all the image source servers. -enable-url-source flag must be defined. This overwrites authorization headers forwarding behavior via X-Forward-Authorization")
-	aPlaceholder        = flag.String("placeholder", "", "Image path to image custom placeholder to be used in case of error. Recommended minimum image size is: 1200x1200")
-	aDisableEndpoints   = flag.String("disable-endpoints", "", "Comma separated endpoints to disable. E.g: form,crop,rotate,health")
-	aHTTPCacheTTL       = flag.Int("http-cache-ttl", -1, "The TTL in seconds")
-	aReadTimeout        = flag.Int("http-read-timeout", 60, "HTTP read timeout in seconds")
-	aWriteTimeout       = flag.Int("http-write-timeout", 60, "HTTP write timeout in seconds")
-	aConcurrency        = flag.Int("concurrency", 0, "Throttle concurrency limit per second")
-	aBurst              = flag.Int("burst", 100, "Throttle burst max cache size")
-	aMRelease           = flag.Int("mrelease", 30, "OS memory release interval in seconds")
-	aCpus               = flag.Int("cpus", runtime.GOMAXPROCS(-1), "Number of cpu cores to use")
+	fs                  = flag.NewFlagSetWithEnvPrefix(os.Args[0], "IMAGINARY", 0)
+	aAddr               *string
+	aPort               *int
+	aVers               *bool
+	aVersl              *bool
+	aHelp               *bool
+	aHelpl              *bool
+	aPathPrefix         *string
+	aCors               *bool
+	aGzip               *bool
+	aAuthForwarding     *bool
+	aEnableURLSource    *bool
+	aEnablePlaceholder  *bool
+	aEnableURLSignature *bool
+	aURLSignatureKey    *string
+	aAllowedOrigins     *string
+	aMaxAllowedSize     *int
+	aKey                *string
+	aMount              *string
+	aCertFile           *string
+	aKeyFile            *string
+	aAuthorization      *string
+	aPlaceholder        *string
+	aDisableEndpoints   *string
+	aHTTPCacheTTL       *int
+	aReadTimeout        *int
+	aWriteTimeout       *int
+	aConcurrency        *int
+	aBurst              *int
+	aMRelease           *int
+	aCpus               *int
 )
 
 const usage = `imaginary %s
@@ -100,15 +102,48 @@ Options:
 `
 
 type URLSignature struct {
-	Key  string
+	Key string
+}
+
+func init() {
+	aAddr = fs.String("a", "", "Bind address")
+	aPort = fs.Int("p", 8088, "Port to listen")
+	aVers = fs.Bool("v", false, "Show version")
+	aVersl = fs.Bool("version", false, "Show version")
+	aHelp = fs.Bool("h", false, "Show help")
+	aHelpl = fs.Bool("help", false, "Show help")
+	aPathPrefix = fs.String("path-prefix", "/", "Url path prefix to listen to")
+	aCors = fs.Bool("cors", false, "Enable CORS support")
+	aGzip = fs.Bool("gzip", false, "Enable gzip compression (deprecated)")
+	aAuthForwarding = fs.Bool("enable-auth-forwarding", false, "Forwards X-Forward-Authorization or Authorization header to the image source server. -enable-url-source flag must be defined. Tip: secure your server from public access to prevent attack vectors")
+	aEnableURLSource = fs.Bool("enable-url-source", false, "Enable remote HTTP URL image source processing")
+	aEnablePlaceholder = fs.Bool("enable-placeholder", false, "Enable image response placeholder to be used in case of error")
+	aEnableURLSignature = fs.Bool("enable-url-signature", false, "Enable URL signature (URL-safe Base64-encoded HMAC digest)")
+	aURLSignatureKey = fs.String("url-signature-key", "", "The URL signature key (32 characters minimum)")
+	aAllowedOrigins = fs.String("allowed-origins", "", "Restrict remote image source processing to certain origins (separated by commas)")
+	aMaxAllowedSize = fs.Int("max-allowed-size", 0, "Restrict maximum size of http image source (in bytes)")
+	aKey = fs.String("key", "", "Define API key for authorization")
+	aMount = fs.String("mount", "", "Mount server local directory")
+	aCertFile = fs.String("certfile", "", "TLS certificate file path")
+	aKeyFile = fs.String("keyfile", "", "TLS private key file path")
+	aAuthorization = fs.String("authorization", "", "Defines a constant Authorization header value passed to all the image source servers. -enable-url-source flag must be defined. This overwrites authorization headers forwarding behavior via X-Forward-Authorization")
+	aPlaceholder = fs.String("placeholder", "", "Image path to image custom placeholder to be used in case of error. Recommended minimum image size is: 1200x1200")
+	aDisableEndpoints = fs.String("disable-endpoints", "", "Comma separated endpoints to disable. E.g: form,crop,rotate,health")
+	aHTTPCacheTTL = fs.Int("http-cache-ttl", -1, "The TTL in seconds")
+	aReadTimeout = fs.Int("http-read-timeout", 60, "HTTP read timeout in seconds")
+	aWriteTimeout = fs.Int("http-write-timeout", 60, "HTTP write timeout in seconds")
+	aConcurrency = fs.Int("concurrency", 0, "Throttle concurrency limit per second")
+	aBurst = fs.Int("burst", 100, "Throttle burst max cache size")
+	aMRelease = fs.Int("mrelease", 30, "OS memory release interval in seconds")
+	aCpus = fs.Int("cpus", runtime.GOMAXPROCS(-1), "Number of cpu cores to use")
+
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, Version, runtime.NumCPU()))
+	}
+	fs.Parse(os.Args[1:])
 }
 
 func main() {
-	flag.Usage = func() {
-		fmt.Fprint(os.Stderr, fmt.Sprintf(usage, Version, runtime.NumCPU()))
-	}
-	flag.Parse()
-
 	if *aHelp || *aHelpl {
 		showUsage()
 	}
@@ -232,7 +267,7 @@ func getURLSignature(key string) URLSignature {
 }
 
 func showUsage() {
-	flag.Usage()
+	fs.Usage()
 	os.Exit(1)
 }
 

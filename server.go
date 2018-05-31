@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/apex/gateway"
 )
 
 type ServerOptions struct {
@@ -56,6 +58,12 @@ func (e Endpoints) IsValid(r *http.Request) bool {
 func Server(o ServerOptions) error {
 	addr := o.Address + ":" + strconv.Itoa(o.Port)
 	handler := NewLog(NewServerMux(o), os.Stdout)
+
+	_, isLambda := os.LookupEnv("LAMBDA_TASK_ROOT")
+
+	if isLambda {
+		return gateway.ListenAndServe(addr, handler)
+	}
 
 	server := &http.Server{
 		Addr:           addr,
