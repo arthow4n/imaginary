@@ -68,29 +68,17 @@ RUN go get -u github.com/golang/dep/cmd/dep
 # Copy imaginary sources
 COPY . $GOPATH/src/github.com/h2non/imaginary
 
+RUN curl -OL https://github.com/arthow4n/sharp-libvips/releases/download/v8.6.3/libvips-8.6.3-linux-x64.tar.gz && tar xf libvips-8.6.3-linux-x64.tar.gz -C /usr/local
+
 # Compile imaginary
 RUN go build -o bin/imaginary github.com/h2non/imaginary
 
 FROM ubuntu:16.04
 
-RUN \
-  # Install runtime dependencies
-  apt-get update && \
-  DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-  libglib2.0-0 libjpeg-turbo8 libpng12-0 libopenexr22 \
-  libwebp5 libtiff5 libgif7 libexif12 libxml2 libpoppler-glib8 \
-  libmagickwand-6.q16-2 libpango1.0-0 libmatio2 libopenslide0 \
-  libgsf-1-114 fftw3 liborc-0.4 librsvg2-2 libcfitsio2 && \
-  # Clean up
-  apt-get autoremove -y && \
-  apt-get autoclean && \
-  apt-get clean && \
-  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
+COPY --from=builder /etc/ssl/certs /etc/ssl/certs
 COPY --from=builder /usr/local/lib /usr/local/lib
 RUN ldconfig
 COPY --from=builder /go/bin/imaginary bin/
-COPY --from=builder /etc/ssl/certs /etc/ssl/certs
 
 # Server port to listen
 ENV PORT 9000
