@@ -130,6 +130,23 @@ vips_reduce_bridge(VipsImage *in, VipsImage **out, double xshrink, double yshrin
 	return vips_reduce(in, out, xshrink, yshrink, NULL);
 }
 
+static int
+attach_cmyk_icc_profile(VipsImage *in, VipsImage **out) {
+	/* Get it from https://github.com/jcupitt/nip2/blob/master/share/nip2/data/cmyk.icm */
+	return vips_icc_import(in, out, "input_profile", "/usr/local/share/icc/cmyk.icm", NULL);
+}
+
+static int
+should_inject_default_cmyk_icc_profile(VipsImage *in) {
+	if (
+		in->Type != VIPS_INTERPRETATION_CMYK ||
+		vips_image_get_typeof(in, VIPS_META_ICC_NAME) != 0
+	) {
+		return 1;
+	}
+	return 0;
+}
+
 int
 vips_type_find_bridge(int t) {
 	if (t == GIF) {

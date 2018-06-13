@@ -121,6 +121,12 @@ func resizer(buf []byte, o Options) ([]byte, error) {
 		return nil, err
 	}
 
+	// Inject default color profile, if necessary
+	image, err = vipsAttachDefaultColorProfile(image)
+	if err != nil {
+		return nil, err
+	}
+
 	return saveImage(image, o)
 }
 

@@ -604,6 +604,22 @@ func vipsAffine(input *C.VipsImage, residualx, residualy float64, i Interpolator
 	return image, nil
 }
 
+func vipsAttachDefaultColorProfile(input *C.VipsImage) (*C.VipsImage, error) {
+	var err C.int
+	err = C.should_inject_default_cmyk_icc_profile(input)
+	if err != 0 {
+		return input, nil
+	}
+
+	var image *C.VipsImage
+	err = C.attach_cmyk_icc_profile(input, &image)
+	if err != 0 {
+		return nil, catchVipsError()
+	}
+
+	return image, nil
+}
+
 func vipsImageType(buf []byte) ImageType {
 	if len(buf) < 12 {
 		return UNKNOWN

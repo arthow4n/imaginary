@@ -67,6 +67,7 @@ RUN go get -u github.com/golang/dep/cmd/dep
 
 
 RUN curl -OL https://github.com/arthow4n/sharp-libvips/releases/download/v8.6.7-alpha2/libvips-8.7.0-alpha2-linux-x64.tar.gz && tar xf libvips-8.7.0-alpha2-linux-x64.tar.gz -C /usr/local
+RUN mkdir -p  /usr/local/share/icc/ && curl -Lo /usr/local/share/icc/cmyk.icm https://github.com/jcupitt/nip2/raw/master/share/nip2/data/cmyk.icm
 
 # Copy imaginary sources
 COPY . $GOPATH/src/github.com/h2non/imaginary
@@ -79,6 +80,7 @@ FROM ubuntu:16.04
 COPY --from=builder /usr/local/lib /usr/local/lib
 RUN ldconfig
 COPY --from=builder /go/bin/imaginary bin/
+COPY --from=builder /usr/local/share/icc/cmyk.icm /usr/local/share/icc/cmyk.icm
 COPY --from=builder /etc/ssl/certs /etc/ssl/certs
 
 # Server port to listen
