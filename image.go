@@ -232,10 +232,11 @@ func Zoom(buf []byte, o ImageOptions) (Image, error) {
 }
 
 func Convert(buf []byte, o ImageOptions) (Image, error) {
-	if o.Type == "" {
-		return Image{}, NewError("Missing required param: type", BadRequest)
-	}
-	if ImageType(o.Type) == bimg.UNKNOWN {
+	// Commented out to allow convert type=auto
+	// if o.Type == "" {
+	// 	return Image{}, NewError("Missing required param: type", BadRequest)
+	// }
+	if o.Type != "" && ImageType(o.Type) == bimg.UNKNOWN {
 		return Image{}, NewError("Invalid image type: "+o.Type, BadRequest)
 	}
 	opts := BimgOptions(o)

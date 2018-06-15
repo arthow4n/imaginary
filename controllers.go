@@ -58,11 +58,13 @@ func determineAcceptMimeType(accept string) string {
 		mediatype, _, _ := mime.ParseMediaType(v)
 		if mediatype == "image/webp" {
 			return "webp"
-		} else if mediatype == "image/png" {
-			return "png"
-		} else if mediatype == "image/jpeg" {
-			return "jpeg"
 		}
+		// Commented out to prevent Safari asking for a jpeg with `image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5`
+		// } else if mediatype == "image/png" {
+		// 	return "png"
+		// } else if mediatype == "image/jpeg" {
+		// 	return "jpeg"
+		// }
 	}
 	// default
 	return ""
