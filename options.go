@@ -73,8 +73,10 @@ func BimgOptions(o ImageOptions) bimg.Options {
 		Rotate:         bimg.Angle(o.Rotate),
 	}
 
-	if len(o.Background) != 0 {
-		opts.Background = bimg.Color{o.Background[0], o.Background[1], o.Background[2]}
+	if len(o.Background) == 0 {
+		opts.Background = bimg.Color{R: 255, G: 255, B: 255}
+	} else {
+		opts.Background = bimg.Color{R: o.Background[0], G: o.Background[1], B: o.Background[2]}
 	}
 
 	if o.Sigma > 0 || o.MinAmpl > 0 {
