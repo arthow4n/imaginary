@@ -67,7 +67,7 @@ func determineAcceptMimeType(accept string) string {
 		// }
 	}
 	// default
-	return ""
+	return "jpeg"
 }
 
 func imageHandler(w http.ResponseWriter, r *http.Request, buf []byte, Operation Operation, o ServerOptions) {
