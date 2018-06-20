@@ -366,6 +366,10 @@ func vipsPreSave(image *C.VipsImage, o *vipsSaveOptions) (*C.VipsImage, error) {
 		C.remove_profile(image)
 	}
 
+	if !o.NoProfile && o.StripMetadata {
+		C.remove_metadata_other_than_profile(image)
+	}
+
 	// Use a default interpretation and cast it to C type
 	if o.Interpretation == 0 {
 		o.Interpretation = InterpretationSRGB
@@ -417,7 +421,7 @@ func vipsSave(image *C.VipsImage, o vipsSaveOptions) ([]byte, error) {
 	saveErr := C.int(0)
 	interlace := C.int(boolToInt(o.Interlace))
 	quality := C.int(o.Quality)
-	strip := C.int(boolToInt(o.StripMetadata))
+	strip := C.int(boolToInt(o.StripMetadata && o.NoProfile))
 	lossless := C.int(boolToInt(o.Lossless))
 
 	if o.Type != 0 && !IsTypeSupportedSave(o.Type) {
@@ -718,4 +722,8 @@ func vipsDrawWatermark(image *C.VipsImage, o WatermarkImage) (*C.VipsImage, erro
 	}
 
 	return out, nil
+}
+
+func vipsResetOrientation(image *C.VipsImage) {
+	C.reset_exif_orientation(image)
 }

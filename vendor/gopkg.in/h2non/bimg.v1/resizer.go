@@ -325,6 +325,10 @@ func rotateAndFlipImage(image *C.VipsImage, o Options) (*C.VipsImage, bool, erro
 		image, err = vipsFlip(image, direction)
 	}
 
+	if rotated && o.StripMetadata {
+		vipsResetOrientation(image)
+	}
+
 	return image, rotated, err
 }
 

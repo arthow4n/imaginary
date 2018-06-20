@@ -65,6 +65,20 @@ remove_profile(VipsImage *image) {
 	vips_image_remove(image, VIPS_META_ICC_NAME);
 }
 
+static void
+remove_metadata_other_than_profile(VipsImage *image) {
+	vips_image_remove(image, VIPS_META_EXIF_NAME);
+	vips_image_remove(image, VIPS_META_XMP_NAME);
+	vips_image_remove(image, VIPS_META_IPTC_NAME);
+	vips_image_remove(image, VIPS_META_PHOTOSHOP_NAME);
+	vips_image_remove(image, VIPS_META_IMAGEDESCRIPTION);
+}
+
+static void
+reset_exif_orientation(VipsImage *image) {
+	vips_autorot_remove_angle(image);
+}
+
 static int
 has_alpha_channel(VipsImage *image) {
 	return (
