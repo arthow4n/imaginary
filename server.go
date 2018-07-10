@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"os"
@@ -53,7 +54,7 @@ func (e Endpoints) IsValid(r *http.Request) bool {
 	return true
 }
 
-func Server(o ServerOptions) error {
+func Server(o ServerOptions) *http.Server {
 	addr := o.Address + ":" + strconv.Itoa(o.Port)
 	handler := NewLog(NewServerMux(o), os.Stdout)
 
@@ -65,7 +66,7 @@ func Server(o ServerOptions) error {
 		WriteTimeout:   time.Duration(o.HTTPWriteTimeout) * time.Second,
 	}
 
-	return listenAndServe(server, o)
+	return server
 }
 
 func listenAndServe(s *http.Server, o ServerOptions) error {
@@ -73,6 +74,10 @@ func listenAndServe(s *http.Server, o ServerOptions) error {
 		return s.ListenAndServeTLS(o.CertFile, o.KeyFile)
 	}
 	return s.ListenAndServe()
+}
+
+func shutdown(s *http.Server) error {
+	return s.Shutdown(context.Background())
 }
 
 func join(o ServerOptions, route string) string {
