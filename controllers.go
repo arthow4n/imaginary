@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -24,10 +26,23 @@ func indexController(w http.ResponseWriter, r *http.Request) {
 }
 
 func healthController(w http.ResponseWriter, r *http.Request) {
-	health := GetHealthStats()
-	body, _ := json.Marshal(health)
+	// health := GetHealthStats()
+	// body, _ := json.Marshal(health)
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(body)
+	w.Header().Set("Cache-Control", "private, max-age=0, no-cache, no-store, must-revalidate")
+
+	healthcheck := os.Getenv("IMAGINARY_HEALTH_CHECK_COMMAND")
+	if healthcheck != "" {
+		cmd := exec.Command("bash", "-c", healthcheck)
+		err := cmd.Run()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"ok":false}`))
+			return
+		}
+	}
+
+	w.Write([]byte(`{"ok":true}`))
 }
 
 func imageController(o ServerOptions, operation Operation) func(http.ResponseWriter, *http.Request) {
