@@ -219,6 +219,7 @@ func main() {
 	go func() {
 		<-stopChan
 		log.Println("caught SIGINT or SIGTERM, stopping...")
+		signal.Stop(stopChan)
 		err := shutdown(srv)
 		if err != nil {
 			exitWithError("cannot gracefully stop the server: %s", err)
