@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -9,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/facebookgo/grace/gracehttp"
 )
 
 type ServerOptions struct {
@@ -71,9 +75,26 @@ func Server(o ServerOptions) *http.Server {
 
 func listenAndServe(s *http.Server, o ServerOptions) error {
 	if o.CertFile != "" && o.KeyFile != "" {
-		return s.ListenAndServeTLS(o.CertFile, o.KeyFile)
+		certContent, err := ioutil.ReadFile(o.CertFile)
+		if err != nil {
+			return err
+		}
+		keyContent, err := ioutil.ReadFile(o.KeyFile)
+		if err != nil {
+			return err
+		}
+		cert, err := tls.X509KeyPair(certContent, keyContent)
+		if err != nil {
+			return err
+		}
+
+		s.TLSConfig = &tls.Config{
+			NextProtos:   []string{"http/1.1"},
+			Certificates: []tls.Certificate{cert},
+		}
 	}
-	return s.ListenAndServe()
+
+	return gracehttp.Serve(s)
 }
 
 func shutdown(s *http.Server) error {

@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
-	"os/signal"
 	"runtime"
 	d "runtime/debug"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	bimg "gopkg.in/h2non/bimg.v1"
@@ -211,30 +208,10 @@ func main() {
 
 	// Start the server
 	srv := Server(opts)
-
-	stopChan := make(chan os.Signal, 1)
-	done := make(chan struct{})
-	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		<-stopChan
-		log.Println("caught SIGINT or SIGTERM, stopping...")
-		signal.Stop(stopChan)
-		err := shutdown(srv)
-		if err != nil {
-			exitWithError("cannot gracefully stop the server: %s", err)
-		}
-		close(done)
-	}()
-
-	go func() {
-		err := listenAndServe(srv, opts)
-		if err != http.ErrServerClosed {
-			exitWithError("cannot start the server: %s", err)
-		}
-	}()
-
-	<-done
+	err := listenAndServe(srv, opts)
+	if err != nil {
+		exitWithError("cannot start the server: %s", err)
+	}
 }
 
 func getPort(port int) int {
