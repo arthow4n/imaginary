@@ -82,12 +82,13 @@ RUN ldconfig
 COPY --from=builder /go/bin/imaginary bin/
 COPY --from=builder /usr/local/share/icc/cmyk.icm /usr/local/share/icc/cmyk.icm
 COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+COPY entrypoint.sh /entrypoint.sh
 
 # Server port to listen
 ENV PORT 9000
 
 # Run the entrypoint command by default when the container starts.
-ENTRYPOINT ["bin/imaginary"]
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Expose the server TCP port
 EXPOSE 9000

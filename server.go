@@ -4,12 +4,14 @@ import (
 	"context"
 	"crypto/tls"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"path"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/facebookgo/grace/gracehttp"
@@ -94,6 +96,15 @@ func listenAndServe(s *http.Server, o ServerOptions) error {
 		}
 	}
 
+	forkAfterSeconds := getForkAfterSeconds()
+
+	ticker := time.NewTicker(time.Duration(forkAfterSeconds) * time.Second)
+	go func() {
+		for range ticker.C {
+			forkSelfToReleaseMemory()
+		}
+	}()
+
 	return gracehttp.Serve(s)
 }
 
@@ -132,4 +143,22 @@ func NewServerMux(o ServerOptions) http.Handler {
 	mux.Handle(join(o, "/pipeline"), image(Pipeline))
 
 	return mux
+}
+
+func getForkAfterSeconds() int {
+	forkAfterSeconds := 1800
+
+	if s := os.Getenv("IMAGINARY_FORK_AFTER"); s != "" {
+		if i, err := strconv.Atoi(s); err == nil {
+			forkAfterSeconds = i
+		}
+	}
+
+	return forkAfterSeconds
+}
+
+func forkSelfToReleaseMemory() {
+	// Paired with gracehttp, tries to fork and release memory.
+	log.Println("Attempting to release memory by sending SIGUSR2 to self")
+	syscall.Kill(syscall.Getpid(), syscall.SIGUSR2)
 }
