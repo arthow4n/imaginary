@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"mime"
 	"net/http"
@@ -20,9 +19,7 @@ func indexController(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, _ := json.Marshal(CurrentVersions)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(body)
+	w.Write([]byte("OK"))
 }
 
 func healthController(w http.ResponseWriter, r *http.Request) {

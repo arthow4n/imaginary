@@ -1,16 +1,15 @@
 package main
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"strings"
 	"time"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
 
 	"github.com/rs/cors"
-	"gopkg.in/h2non/bimg.v1"
 	"gopkg.in/throttled/throttled.v2"
 	"gopkg.in/throttled/throttled.v2/store/memstore"
 )
@@ -131,7 +130,6 @@ func authorizeClient(next http.Handler, o ServerOptions) http.Handler {
 
 func defaultHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Server", fmt.Sprintf("imaginary %s (bimg %s)", Version, bimg.Version))
 		next.ServeHTTP(w, r)
 	})
 }
